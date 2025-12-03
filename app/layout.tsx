@@ -1,5 +1,6 @@
 import type React from "react"
-import type { Metadata } from "next"
+import { Suspense } from "react"
+import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
@@ -33,12 +34,14 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-icon.png",
   },
+}
+
+export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
     { media: "(prefers-color-scheme: dark)", color: "#121212" },
   ],
 }
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -49,10 +52,12 @@ export default function RootLayout({
       <body className={`font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <LayoutChromeProvider>
-            <Header />
-            <Shell>{children}</Shell>
+            <Suspense fallback={null}>
+              <Header />
+              <Shell>{children}</Shell>
+            </Suspense>
           </LayoutChromeProvider>
-          <Analytics />
+        <Analytics />
         </ThemeProvider>
       </body>
     </html>
