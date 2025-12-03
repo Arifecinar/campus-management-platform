@@ -13,7 +13,10 @@ import {
   Download,
   Printer,
   Maximize2,
+  Plus,
+  X,
 } from "lucide-react"
+import { useLayoutChrome } from "@/components/layout-chrome-provider"
 import {
   AreaChart,
   Area,
@@ -25,6 +28,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  LabelList,
 } from "recharts"
 
 const dailyEnergyData = [
@@ -61,8 +65,47 @@ const buildingData = [
   { name: "Kütüphane", consumption: 87, status: "low" },
 ]
 
+type Marker = {
+  name: string
+  top: string
+  left: string
+  // Severity color: red = yüksek (çok), yellow = orta, green = az
+  color: "red" | "yellow" | "green"
+  short?: string
+}
+
+// Approximate positions on /pamukkale-campus-map.png (percent-based)
+const campusMarkers: Marker[] = [
+  // Sağ taraf (Hastane/Tip bölgesi)
+  { name: "Tıp Fakültesi", top: "22%", left: "83%", color: "red", short: "Tıp" },
+  { name: "Üniversite Hastanesi", top: "29%", left: "86%", color: "red", short: "Hst." },
+  { name: "Kongre ve Kültür Merkezi", top: "62%", left: "79%", color: "yellow", short: "Kongre" },
+
+  // Üst orta ve sol üst
+  { name: "PAÜ Güvenlik / Havuz Başı", top: "17%", left: "64%", color: "yellow", short: "Güv." },
+  { name: "Kınıklı Mezarlığı (referans)", top: "9%", left: "45%", color: "green", short: "Ref." },
+
+  // Orta şerit
+  { name: "Fen-Edebiyat Fakültesi", top: "70%", left: "53%", color: "green", short: "Fen" },
+  { name: "Mühendislik Fakültesi", top: "61%", left: "48%", color: "yellow", short: "Müh." },
+  { name: "Yabancı Diller Yüksekokulu", top: "70%", left: "63%", color: "green", short: "YDYO" },
+  { name: "Eğitim Fakültesi", top: "38%", left: "55%", color: "green", short: "Eğt." },
+  { name: "Sağlık Bilimleri Fakültesi", top: "43%", left: "52%", color: "yellow", short: "Sağ." },
+
+  // Sol alt
+  { name: "Teknoloji Fakültesi", top: "83%", left: "28%", color: "yellow", short: "Tek." },
+  { name: "Spor Bilimleri / Spor Merkezi", top: "78%", left: "23%", color: "green", short: "Spor" },
+  { name: "PAÜ Koru / Konukevi", top: "60%", left: "20%", color: "green", short: "Konuk" },
+
+  // Sol orta
+  { name: "Kütüphane", top: "52%", left: "36%", color: "green", short: "Kütüph." },
+  { name: "İdari Bina", top: "52%", left: "33%", color: "green", short: "İdari" },
+]
+
 export function EnergyDashboard() {
   const [timeframe, setTimeframe] = useState<"daily" | "weekly" | "monthly">("daily")
+  const [isMapExpanded, setIsMapExpanded] = useState(false)
+  const { setChromeHidden } = useLayoutChrome()
 
   const getEnergyData = () => {
     switch (timeframe) {
@@ -104,7 +147,7 @@ export function EnergyDashboard() {
             </Button>
           </div>
 
-          <div className="flex gap-2 bg-white border border-border rounded-xl p-1.5 shadow-professional">
+          <div className="flex gap-2 bg-background border border-border rounded-xl p-1.5 shadow-professional">
             <Button
               variant="ghost"
               size="sm"
@@ -146,7 +189,7 @@ export function EnergyDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-white border-border p-6 shadow-elevated hover:shadow-prominent transition-all">
+        <Card className="bg-card border-border p-6 shadow-elevated hover:shadow-prominent transition-all">
           <div className="flex items-center justify-between mb-3">
             <span className="text-muted-foreground text-sm font-medium">Toplam Anlık Tüketim</span>
             <div className="w-11 h-11 rounded-xl bg-yellow-50 flex items-center justify-center">
@@ -161,7 +204,7 @@ export function EnergyDashboard() {
           </div>
         </Card>
 
-        <Card className="bg-white border-border p-6 shadow-elevated hover:shadow-prominent transition-all">
+        <Card className="bg-card border-border p-6 shadow-elevated hover:shadow-prominent transition-all">
           <div className="flex items-center justify-between mb-3">
             <span className="text-muted-foreground text-sm font-medium">Günlük Tasarruf Oranı</span>
             <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
@@ -176,7 +219,7 @@ export function EnergyDashboard() {
           </div>
         </Card>
 
-        <Card className="bg-white border-border p-6 shadow-elevated hover:shadow-prominent transition-all">
+        <Card className="bg-card border-border p-6 shadow-elevated hover:shadow-prominent transition-all">
           <div className="flex items-center justify-between mb-3">
             <span className="text-muted-foreground text-sm font-medium">Tasarruf Edilen Miktar</span>
             <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center">
@@ -191,7 +234,7 @@ export function EnergyDashboard() {
           </div>
         </Card>
 
-        <Card className="bg-white border-border p-6 shadow-elevated hover:shadow-prominent transition-all">
+        <Card className="bg-card border-border p-6 shadow-elevated hover:shadow-prominent transition-all">
           <div className="flex items-center justify-between mb-3">
             <span className="text-muted-foreground text-sm font-medium">Aktif Alarm Sayısı</span>
             <div className="w-11 h-11 rounded-xl bg-orange-50 flex items-center justify-center">
@@ -208,7 +251,7 @@ export function EnergyDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 bg-white border-border p-7 shadow-elevated">
+        <Card className="lg:col-span-2 bg-card border-border p-7 shadow-elevated">
           <h3 className="text-2xl font-bold text-foreground mb-5 tracking-tight">Canlı Enerji Tüketimi Haritası</h3>
           <div className="relative w-full h-[500px] bg-accent/20 rounded-2xl overflow-hidden border-2 border-border/50">
             <img
@@ -216,31 +259,40 @@ export function EnergyDashboard() {
               alt="Pamukkale Üniversitesi Kampüs Haritası"
               className="w-full h-full object-contain"
             />
-            <div className="absolute top-[28%] left-[22%] w-20 h-20 bg-red-500/30 border-4 border-red-500 rounded-2xl flex items-center justify-center animate-pulse shadow-prominent backdrop-blur-sm">
-              <div className="text-center">
-                <Building2 className="w-10 h-10 text-red-500 mx-auto mb-1" />
-                <span className="text-xs font-bold text-red-500">Tıp</span>
-              </div>
-            </div>
-            <div className="absolute top-[42%] left-[48%] w-16 h-16 bg-yellow-500/30 border-4 border-yellow-500 rounded-2xl flex items-center justify-center shadow-elevated backdrop-blur-sm">
-              <div className="text-center">
-                <Building2 className="w-8 h-8 text-yellow-500 mx-auto mb-1" />
-                <span className="text-xs font-bold text-yellow-500">Müh.</span>
-              </div>
-            </div>
-            <div className="absolute top-[52%] left-[33%] w-14 h-14 bg-secondary/30 border-4 border-secondary rounded-2xl flex items-center justify-center shadow-elevated backdrop-blur-sm">
-              <div className="text-center">
-                <Building2 className="w-7 h-7 text-secondary mx-auto" />
-                <span className="text-xs font-bold text-secondary">İdari</span>
-              </div>
-            </div>
-            <div className="absolute top-[62%] left-[58%] w-14 h-14 bg-secondary/30 border-4 border-secondary rounded-2xl flex items-center justify-center shadow-elevated backdrop-blur-sm">
-              <div className="text-center">
-                <Building2 className="w-7 h-7 text-secondary mx-auto" />
-                <span className="text-xs font-bold text-secondary">Fen</span>
-              </div>
-            </div>
-            <div className="absolute bottom-6 left-6 bg-white/98 backdrop-blur-sm p-5 rounded-2xl border-2 border-border/50 shadow-elevated">
+            <button
+              type="button"
+              onClick={() => {
+                setIsMapExpanded(true)
+                setChromeHidden(true)
+              }}
+              className="absolute top-3 right-3 z-10 w-10 h-10 rounded-full bg-white/90 dark:bg-background/80 border border-border shadow-professional flex items-center justify-center hover:shadow-elevated transition-all"
+              title="Haritayı büyüt"
+            >
+              <Plus className="w-5 h-5 text-foreground" />
+            </button>
+            {campusMarkers.map((m, idx) => {
+              const colorMap: Record<Marker["color"], { bg: string; border: string; text: string }> = {
+                red: { bg: "bg-red-500/30", border: "border-red-500", text: "text-red-600 dark:text-red-400" },
+                yellow: { bg: "bg-yellow-500/30", border: "border-yellow-500", text: "text-yellow-600 dark:text-yellow-400" },
+                green: { bg: "bg-emerald-500/25", border: "border-emerald-500", text: "text-emerald-600 dark:text-emerald-400" },
+              }
+              const c = colorMap[m.color]
+              const sizeClass = "w-14 h-14"
+              return (
+                <div
+                  key={`${m.name}-${idx}`}
+                  title={m.name}
+                  className={`absolute ${sizeClass} ${c.bg} ${c.border} border-4 rounded-2xl flex items-center justify-center shadow-elevated backdrop-blur-sm hover:scale-105 transition-transform`}
+                  style={{ top: m.top, left: m.left }}
+                >
+                  <div className="text-center leading-tight px-1">
+                    <Building2 className={`w-7 h-7 mx-auto ${c.text}`} />
+                    <span className={`text-[10px] font-bold ${c.text}`}>{m.short ?? m.name}</span>
+                  </div>
+                </div>
+              )
+            })}
+            <div className="absolute bottom-6 left-6 bg-card/95 backdrop-blur-sm p-5 rounded-2xl border-2 border-border/50 shadow-elevated">
               <div className="flex items-center gap-5 text-sm font-semibold">
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 bg-red-500 rounded-lg shadow-professional"></div>
@@ -251,15 +303,87 @@ export function EnergyDashboard() {
                   <span className="text-foreground">Normal</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 bg-secondary rounded-lg shadow-professional"></div>
+                  <div className="w-5 h-5 bg-emerald-500 rounded-lg shadow-professional"></div>
                   <span className="text-foreground">Düşük</span>
                 </div>
               </div>
             </div>
           </div>
+
+          {isMapExpanded && (
+            <div
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center px-4"
+              onClick={() => {
+                setIsMapExpanded(false)
+                setChromeHidden(false)
+              }}
+            >
+              <div
+                className="relative w-[min(1200px,95vw)] h-[80vh] bg-card rounded-2xl border-2 border-border shadow-prominent overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMapExpanded(false)
+                    setChromeHidden(false)
+                  }}
+                  className="absolute top-3 right-3 z-10 w-10 h-10 rounded-full bg-white/90 dark:bg-background/80 border border-border shadow-professional flex items-center justify-center hover:shadow-elevated transition-all"
+                  title="Kapat"
+                >
+                  <X className="w-5 h-5 text-foreground" />
+                </button>
+                <div className="relative w-full h-full bg-accent/20">
+                  <img
+                    src="/pamukkale-campus-map.png"
+                    alt="Pamukkale Üniversitesi Kampüs Haritası - Büyük Görünüm"
+                    className="w-full h-full object-contain"
+                  />
+                  {campusMarkers.map((m, idx) => {
+                    const colorMap: Record<Marker["color"], { bg: string; border: string; text: string }> = {
+                      red: { bg: "bg-red-500/30", border: "border-red-500", text: "text-red-600 dark:text-red-400" },
+                      yellow: { bg: "bg-yellow-500/30", border: "border-yellow-500", text: "text-yellow-600 dark:text-yellow-400" },
+                      green: { bg: "bg-emerald-500/25", border: "border-emerald-500", text: "text-emerald-600 dark:text-emerald-400" },
+                    }
+                    const c = colorMap[m.color]
+                    const sizeClass = "w-16 h-16"
+                    return (
+                      <div
+                        key={`dlg-${m.name}-${idx}`}
+                        title={m.name}
+                        className={`absolute ${sizeClass} ${c.bg} ${c.border} border-4 rounded-2xl flex items-center justify-center shadow-elevated backdrop-blur-sm`}
+                        style={{ top: m.top, left: m.left }}
+                      >
+                        <div className="text-center leading-tight px-1">
+                          <Building2 className={`w-8 h-8 mx-auto ${c.text}`} />
+                          <span className={`text-[11px] font-bold ${c.text}`}>{m.short ?? m.name}</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                  <div className="absolute bottom-6 left-6 bg-card/95 backdrop-blur-sm p-5 rounded-2xl border-2 border-border/50 shadow-elevated">
+                    <div className="flex items-center gap-5 text-sm font-semibold">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 bg-red-500 rounded-lg shadow-professional"></div>
+                        <span className="text-foreground">Yüksek Tüketim</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 bg-yellow-500 rounded-lg shadow-professional"></div>
+                        <span className="text-foreground">Normal</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 bg-emerald-500 rounded-lg shadow-professional"></div>
+                        <span className="text-foreground">Düşük</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </Card>
 
-        <Card className="bg-white border-border p-7 shadow-elevated">
+        <Card className="bg-card border-border p-7 shadow-elevated">
           <h3 className="text-2xl font-bold text-foreground mb-5 tracking-tight">Otomatik Alarmlar</h3>
           <div className="space-y-4">
             <div className="bg-red-50 border-l-4 border-red-500 rounded-xl p-5 shadow-professional hover:shadow-elevated transition-all">
@@ -311,39 +435,41 @@ export function EnergyDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-white border-border p-7 shadow-elevated">
+        <Card className="bg-card border-border p-7 shadow-elevated">
           <h3 className="text-2xl font-bold text-foreground mb-5 tracking-tight">Bina Bazlı Anlık Tüketim</h3>
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={buildingData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis
                 dataKey="name"
-                stroke="hsl(var(--muted-foreground))"
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 13, fontWeight: 500 }}
+                stroke="var(--color-muted-foreground)"
+                tick={{ fill: "var(--color-muted-foreground)", fontSize: 13, fontWeight: 500 }}
                 angle={-15}
                 textAnchor="end"
                 height={90}
               />
               <YAxis
-                stroke="hsl(var(--muted-foreground))"
-                tick={{ fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
+                stroke="var(--color-muted-foreground)"
+                tick={{ fill: "var(--color-muted-foreground)", fontWeight: 500 }}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
+                  backgroundColor: "var(--color-card)",
+                  border: "1px solid var(--color-border)",
                   borderRadius: "12px",
-                  color: "hsl(var(--foreground))",
+                  color: "var(--color-foreground)",
                   boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                   padding: "12px",
                 }}
               />
-              <Bar dataKey="consumption" fill="hsl(var(--primary))" radius={[10, 10, 0, 0]} />
+              <Bar dataKey="consumption" fill="var(--color-primary)" radius={[10, 10, 0, 0]}>
+                <LabelList dataKey="consumption" position="top" fill="var(--color-primary-foreground)" fontWeight={600} />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </Card>
 
-        <Card className="bg-white border-border p-7 shadow-elevated">
+        <Card className="bg-card border-border p-7 shadow-elevated">
           <h3 className="text-2xl font-bold text-foreground mb-5 tracking-tight">
             {timeframe === "daily" && "Günlük Enerji Tasarruf Raporu"}
             {timeframe === "weekly" && "Haftalık Enerji Tasarruf Raporu"}
@@ -381,7 +507,7 @@ export function EnergyDashboard() {
                   padding: "12px",
                 }}
               />
-              <Legend wrapperStyle={{ paddingTop: "20px" }} />
+              <Legend wrapperStyle={{ paddingTop: "20px", color: "hsl(var(--muted-foreground))" }} />
               <Area
                 type="monotone"
                 dataKey="tuketim"

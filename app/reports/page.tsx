@@ -2,9 +2,11 @@
 
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Download, FileText, Calendar, TrendingUp, TrendingDown, Zap, Bus, Trash2, Home, Building2 } from "lucide-react"
-import { useState } from "react"
-import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Download, FileText, Calendar, TrendingUp, TrendingDown, Zap, Bus, Trash2, Building2, ChevronDown } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { format, formatDistanceToNow } from "date-fns"
+import { tr } from "date-fns/locale"
 import {
   AreaChart,
   Area,
@@ -113,104 +115,118 @@ const efficiencyData = [
 ]
 
 export default function ReportsPage() {
-  const [showDatePicker, setShowDatePicker] = useState(false)
-  const [selectedDate, setSelectedDate] = useState(new Date())
+  const [showMonthPicker, setShowMonthPicker] = useState(false)
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const d = new Date()
+    return `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, "0")}`
+  })
   const [selectedFaculty, setSelectedFaculty] = useState("genel")
   const [showFacultyDropdown, setShowFacultyDropdown] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
+  const [nowTick, setNowTick] = useState(0)
+
+  useEffect(() => {
+    const id = setInterval(() => setNowTick((t) => t + 1), 60000)
+    return () => clearInterval(id)
+  }, [])
 
   const monthlyComparisonData = monthlyComparisonDataByFaculty[selectedFaculty]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-accent/10 to-background p-8">
+    <div className="min-h-screen bg-gradient-to-br from-background via-accent/10 to-background p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-5">
-            <Link
-              href="/"
-              className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white hover:bg-primary hover:text-white border-2 border-border hover:border-primary transition-all shadow-professional hover:shadow-elevated group"
-            >
-              <Home className="w-5 h-5" />
-              <span className="font-semibold text-sm">Anasayfa</span>
-            </Link>
-            <div>
-              <h1 className="text-4xl font-bold text-foreground tracking-tight">Raporlar</h1>
-              <p className="text-muted-foreground text-lg mt-1">Detaylı analiz ve performans raporları</p>
-            </div>
+        <div className="flex items-end justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">Raporlar</h1>
+            <p className="text-muted-foreground mt-1">
+              Detaylı analiz ve performans raporları •{" "}
+              <span className="text-foreground" suppressHydrationWarning>
+                {format(new Date(), "d MMM yyyy, HH:mm", { locale: tr })}
+              </span>
+            </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <div className="relative">
-              <button
-                onClick={() => setShowDatePicker(!showDatePicker)}
-                className="flex items-center gap-3 px-5 py-3 bg-white hover:bg-accent border-2 border-border rounded-xl text-foreground font-semibold transition-all shadow-professional hover:shadow-elevated"
-              >
-                <Calendar className="w-5 h-5 text-primary" />
-                <span className="text-sm">{selectedDate.toLocaleDateString("tr-TR")}</span>
-              </button>
-              {showDatePicker && (
-                <div className="absolute right-0 top-full mt-2 bg-white border-2 border-primary/20 rounded-xl shadow-prominent p-5 z-50">
+              <Button variant="outline" onClick={() => setShowMonthPicker((v) => !v)}>
+                <Calendar className="w-4 h-4 mr-2" />
+                <span className="text-sm">{selectedMonth}</span>
+                <ChevronDown className="w-4 h-4 ml-2" />
+              </Button>
+              {showMonthPicker && (
+                <div className="absolute right-0 top-full mt-2 bg-card border rounded-md shadow-prominent p-3 z-50">
                   <input
-                    type="date"
-                    value={selectedDate.toISOString().split("T")[0]}
+                    type="month"
+                    value={selectedMonth}
                     onChange={(e) => {
-                      setSelectedDate(new Date(e.target.value))
-                      setShowDatePicker(false)
+                      setSelectedMonth(e.target.value)
+                      setShowMonthPicker(false)
                     }}
-                    className="px-4 py-3 border-2 border-border rounded-xl text-foreground font-semibold focus:border-primary focus:outline-none transition-all"
+                    className="px-3 py-2 bg-background border border-border rounded-md text-sm"
                   />
                 </div>
               )}
             </div>
-            <button className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white rounded-xl transition-all font-semibold shadow-professional hover:shadow-elevated">
-              <Download className="w-5 h-5" />
-              <span className="text-sm">Rapor İndir</span>
-            </button>
+            <div className="relative">
+              <Button onClick={() => setExportOpen((v) => !v)}>
+                <Download className="w-4 h-4 mr-2" />
+                Dışa Aktar
+                <ChevronDown className="w-4 h-4 ml-2" />
+              </Button>
+              {exportOpen && (
+                <div className="absolute right-0 top-full mt-2 bg-card border rounded-md shadow-prominent py-1 z-50 min-w-40">
+                  <button className="w-full text-left px-3 py-2 text-sm hover:bg-accent/40">PDF</button>
+                  <button className="w-full text-left px-3 py-2 text-sm hover:bg-accent/40">CSV</button>
+                  <button className="w-full text-left px-3 py-2 text-sm hover:bg-accent/40">XLSX</button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-white border-border p-6">
+          <Card className="bg-card border-border p-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-muted-foreground text-sm">Toplam Tasarruf (Aylık)</span>
               <TrendingUp className="w-5 h-5 text-secondary" />
             </div>
-            <div className="text-3xl font-bold text-foreground mb-1">₺52,450</div>
+            <div className="text-2xl md:text-3xl font-semibold text-foreground mb-1">₺52,450</div>
             <div className="flex items-center gap-1 text-secondary text-sm">
               <TrendingUp className="w-4 h-4" />
               <span>+18.2%</span>
             </div>
           </Card>
 
-          <Card className="bg-white border-border p-6">
+          <Card className="bg-card border-border p-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-muted-foreground text-sm">Enerji Verimliliği</span>
               <Zap className="w-5 h-5 text-primary" />
             </div>
-            <div className="text-3xl font-bold text-foreground mb-1">87%</div>
+            <div className="text-2xl md:text-3xl font-semibold text-foreground mb-1">87%</div>
             <div className="flex items-center gap-1 text-secondary text-sm">
               <TrendingUp className="w-4 h-4" />
               <span>+5.3%</span>
             </div>
           </Card>
 
-          <Card className="bg-white border-border p-6">
+          <Card className="bg-card border-border p-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-muted-foreground text-sm">Filo Performansı</span>
               <Bus className="w-5 h-5 text-purple-400" />
             </div>
-            <div className="text-3xl font-bold text-foreground mb-1">92%</div>
+            <div className="text-2xl md:text-3xl font-semibold text-foreground mb-1">92%</div>
             <div className="flex items-center gap-1 text-secondary text-sm">
               <TrendingUp className="w-4 h-4" />
               <span>+2.8%</span>
             </div>
           </Card>
 
-          <Card className="bg-white border-border p-6">
+          <Card className="bg-card border-border p-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-muted-foreground text-sm">Atık Azaltma</span>
               <Trash2 className="w-5 h-5 text-accent" />
             </div>
-            <div className="text-3xl font-bold text-foreground mb-1">78%</div>
+            <div className="text-2xl md:text-3xl font-semibold text-foreground mb-1">78%</div>
             <div className="flex items-center gap-1 text-red-400 text-sm">
               <TrendingDown className="w-4 h-4" />
               <span>-1.2%</span>
@@ -219,84 +235,82 @@ export default function ReportsPage() {
         </div>
 
         {/* Available Reports */}
-        <Card className="bg-white border-border p-6">
+        <Card className="bg-card border-border p-6">
           <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
             <FileText className="w-5 h-5 text-primary" />
             Hazır Raporlar
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="bg-accent/30 border border-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold text-foreground">Enerji Analiz Raporu</h3>
-              </div>
-              <p className="text-sm text-muted-foreground mb-3">Aylık enerji tüketimi ve tasarruf analizi</p>
-              <Badge className="bg-secondary/20 text-secondary border border-secondary/50">Haziran 2024</Badge>
-            </div>
-
-            <div className="bg-accent/30 border border-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex items-center gap-2 mb-2">
-                <Bus className="w-5 h-5 text-purple-400" />
-                <h3 className="font-semibold text-foreground">Filo Performans Raporu</h3>
-              </div>
-              <p className="text-sm text-muted-foreground mb-3">Ulaşım verimliliği ve yakıt tasarrufu</p>
-              <Badge className="bg-secondary/20 text-secondary border border-secondary/50">Haziran 2024</Badge>
-            </div>
-
-            <div className="bg-accent/30 border border-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex items-center gap-2 mb-2">
-                <Trash2 className="w-5 h-5 text-accent" />
-                <h3 className="font-semibold text-foreground">Atık Yönetim Raporu</h3>
-              </div>
-              <p className="text-sm text-muted-foreground mb-3">Toplama rotası optimizasyonu analizi</p>
-              <Badge className="bg-secondary/20 text-secondary border border-secondary/50">Haziran 2024</Badge>
-            </div>
-
-            <div className="bg-accent/30 border border-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-5 h-5 text-secondary" />
-                <h3 className="font-semibold text-foreground">Genel Performans Raporu</h3>
-              </div>
-              <p className="text-sm text-muted-foreground mb-3">Tüm sistemlerin kümülatif analizi</p>
-              <Badge className="bg-secondary/20 text-secondary border border-secondary/50">Haziran 2024</Badge>
-            </div>
-
-            <div className="bg-accent/30 border border-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex items-center gap-2 mb-2">
-                <FileText className="w-5 h-5 text-orange-400" />
-                <h3 className="font-semibold text-foreground">Alarm İstatistikleri</h3>
-              </div>
-              <p className="text-sm text-muted-foreground mb-3">Alarm sıklığı ve çözüm süreleri</p>
-              <Badge className="bg-secondary/20 text-secondary border border-secondary/50">Haziran 2024</Badge>
-            </div>
-
-            <div className="bg-accent/30 border border-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex items-center gap-2 mb-2">
-                <Calendar className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold text-foreground">Yıllık Özet Raporu</h3>
-              </div>
-              <p className="text-sm text-muted-foreground mb-3">2024 yılı kümülatif performans</p>
-              <Badge className="bg-orange-500/20 text-orange-600 border border-orange-500/50">2024</Badge>
-            </div>
+          <div className="relative w-full overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-muted-foreground">
+                <tr className="text-left">
+                  <th className="px-4 py-3 font-medium">Rapor</th>
+                  <th className="px-4 py-3 font-medium">Dönem</th>
+                  <th className="px-4 py-3 font-medium">Kapsam</th>
+                  <th className="px-4 py-3 font-medium">Boyut</th>
+                  <th className="px-4 py-3 font-medium">Oluşturulma</th>
+                  <th className="px-4 py-3 font-medium"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {(() => {
+                  const now = new Date()
+                  const rows = [
+                    { name: "Enerji Analiz Raporu", icon: <Zap className="w-4 h-4 text-primary" />, period: selectedMonth, scope: faculties.find((f) => f.id === selectedFaculty)?.name, size: "2.1 MB", createdAt: now },
+                    { name: "Filo Performans Raporu", icon: <Bus className="w-4 h-4 text-purple-500" />, period: selectedMonth, scope: "Ulaşım", size: "1.2 MB", createdAt: new Date(now.getTime() - 5 * 60 * 1000) },
+                    { name: "Atık Yönetim Raporu", icon: <Trash2 className="w-4 h-4 text-accent" />, period: selectedMonth, scope: "Atık", size: "1.0 MB", createdAt: new Date(now.getTime() - 10 * 60 * 1000) },
+                    { name: "Genel Performans Raporu", icon: <TrendingUp className="w-4 h-4 text-secondary" />, period: selectedMonth, scope: "Kampüs Geneli", size: "3.6 MB", createdAt: new Date(now.getTime() - 20 * 60 * 1000) },
+                  ]
+                  return rows
+                })().map((r, i) => (
+                  <tr key={i} className="border-t border-border/70 hover:bg-accent/30">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {r.icon}
+                        <span className="text-foreground font-medium">{r.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge className="bg-primary/10 text-primary border border-primary/30">{r.period}</Badge>
+                    </td>
+                    <td className="px-4 py-3">{r.scope}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{r.size}</td>
+                    <td className="px-4 py-3 text-muted-foreground" suppressHydrationWarning>
+                      {formatDistanceToNow(r.createdAt, { addSuffix: true, locale: tr })}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="outline" size="sm">Görüntüle</Button>
+                        <Button size="sm">
+                          <Download className="w-4 h-4 mr-2" />
+                          İndir
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </Card>
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Monthly Comparison */}
-          <Card className="bg-white border-border p-6">
+          <Card className="bg-card border-border p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-foreground">Aylık Sistem Karşılaştırması</h3>
               <div className="relative">
                 <button
                   onClick={() => setShowFacultyDropdown(!showFacultyDropdown)}
-                  className="flex items-center gap-2 px-4 py-2 bg-accent/50 hover:bg-accent border-2 border-border rounded-lg text-foreground font-medium transition-all text-sm"
+                  className="flex items-center gap-2 px-3 py-2 bg-background hover:bg-accent/40 border border-border rounded-md text-foreground transition-all text-sm"
                 >
                   <Building2 className="w-4 h-4 text-primary" />
                   <span>{faculties.find((f) => f.id === selectedFaculty)?.name}</span>
+                  <ChevronDown className="w-4 h-4" />
                 </button>
                 {showFacultyDropdown && (
-                  <div className="absolute right-0 top-full mt-2 bg-white border-2 border-border rounded-xl shadow-prominent z-50 min-w-[280px]">
+                  <div className="absolute right-0 top-full mt-2 bg-card border border-border rounded-md shadow-prominent z-50 min-w-[280px]">
                     {faculties.map((faculty) => (
                       <button
                         key={faculty.id}
@@ -304,7 +318,7 @@ export default function ReportsPage() {
                           setSelectedFaculty(faculty.id)
                           setShowFacultyDropdown(false)
                         }}
-                        className={`w-full text-left px-4 py-3 hover:bg-accent/50 transition-colors first:rounded-t-xl last:rounded-b-xl ${
+                        className={`w-full text-left px-3 py-2 hover:bg-accent/40 transition-colors first:rounded-t-md last:rounded-b-md ${
                           selectedFaculty === faculty.id
                             ? "bg-primary/10 text-primary font-semibold"
                             : "text-foreground"
@@ -342,7 +356,7 @@ export default function ReportsPage() {
           </Card>
 
           {/* Savings Trend */}
-          <Card className="bg-white border-border p-6">
+          <Card className="bg-card border-border p-6">
             <h3 className="text-xl font-semibold text-foreground mb-4">Tasarruf Trendi</h3>
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={savingsData}>
@@ -379,7 +393,7 @@ export default function ReportsPage() {
           </Card>
 
           {/* Efficiency Metrics */}
-          <Card className="lg:col-span-2 bg-white border-border p-6">
+          <Card className="lg:col-span-2 bg-card border-border p-6">
             <h3 className="text-xl font-semibold text-foreground mb-4">Verimlilik Metrikleri</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={efficiencyData} layout="vertical">

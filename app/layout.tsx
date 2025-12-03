@@ -3,6 +3,10 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Header } from "@/components/header"
+import { Shell } from "@/components/shell"
+import { LayoutChromeProvider } from "@/components/layout-chrome-provider"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
@@ -29,6 +33,10 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-icon.png",
   },
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#121212" },
+  ],
 }
 
 export default function RootLayout({
@@ -37,10 +45,15 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="tr" className="dark">
+    <html lang="tr" suppressHydrationWarning>
       <body className={`font-sans antialiased`}>
-        {children}
-        <Analytics />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <LayoutChromeProvider>
+            <Header />
+            <Shell>{children}</Shell>
+          </LayoutChromeProvider>
+          <Analytics />
+        </ThemeProvider>
       </body>
     </html>
   )

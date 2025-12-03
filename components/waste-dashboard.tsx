@@ -16,7 +16,8 @@ import {
   Printer,
   Maximize2,
 } from "lucide-react"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
+import { useState } from "react"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LabelList } from "recharts"
 
 const wasteVolumeData = [
   { bolge: "Bölge A", hacim: 862 },
@@ -32,7 +33,47 @@ const binStatusData = [
   { name: "Boş (%0-49)", value: 23, color: "hsl(var(--secondary))" },
 ]
 
+// Önceki aya göre ayrıştırılma değişimi (pozitif=artış, negatif=azalış)
+const separationDelta = [
+  { tur: "Kağıt/Karton", delta: 7 },
+  { tur: "Plastik", delta: 6 },
+  { tur: "Cam", delta: 4 },
+  { tur: "Metal", delta: -2 },
+]
+
+type BinMarker = {
+  id: string
+  faculty: string
+  top: string
+  left: string
+  fill: number
+  coords: { lat: number; lng: number }
+}
+
+// örnek yerleşimler (harita görseline göre yüzdelik)
+const binMarkers: BinMarker[] = [
+  { id: "A-101", faculty: "Mühendislik", top: "25%", left: "50%", fill: 88, coords: { lat: 37.7438, lng: 29.0946 } },
+  { id: "A-102", faculty: "Mühendislik", top: "60%", left: "47%", fill: 65, coords: { lat: 37.7435, lng: 29.0942 } },
+  { id: "B-201", faculty: "Fen-Edebiyat", top: "70%", left: "53%", fill: 32, coords: { lat: 37.7428, lng: 29.0961 } },
+  { id: "B-202", faculty: "Fen-Edebiyat", top: "72%", left: "58%", fill: 58, coords: { lat: 37.7426, lng: 29.0967 } },
+  { id: "C-301", faculty: "Kütüphane", top: "52%", left: "36%", fill: 82, coords: { lat: 37.7442, lng: 29.0907 } },
+  { id: "D-401", faculty: "İdari Bina", top: "52%", left: "33%", fill: 41, coords: { lat: 37.7441, lng: 29.0901 } },
+  { id: "E-501", faculty: "Tıp Fakültesi", top: "21%", left: "84%", fill: 95, coords: { lat: 37.7439, lng: 29.1043 } },
+  { id: "E-502", faculty: "Üni. Hastanesi", top: "29%", left: "86%", fill: 87, coords: { lat: 37.7434, lng: 29.1049 } },
+  { id: "F-601", faculty: "Spor Merkezi", top: "78%", left: "23%", fill: 51, coords: { lat: 37.7396, lng: 29.0862 } },
+  { id: "G-701", faculty: "Yabancı Diller", top: "70%", left: "63%", fill: 44, coords: { lat: 37.7417, lng: 29.1007 } },
+  { id: "H-801", faculty: "Eğitim Fakültesi", top: "38%", left: "55%", fill: 73, coords: { lat: 37.7452, lng: 29.0978 } },
+  { id: "I-901", faculty: "Sağlık Bilimleri", top: "43%", left: "52%", fill: 54, coords: { lat: 37.7444, lng: 29.0981 } },
+]
+
+function getFillColor(fill: number) {
+  if (fill >= 80) return "bg-red-500"
+  if (fill >= 50) return "bg-orange-500"
+  return "bg-emerald-500"
+}
+
 export function WasteDashboard() {
+  const [hoverBin, setHoverBin] = useState<BinMarker | null>(null)
   return (
     <div className="space-y-8">
       <div className="flex items-start justify-between">
@@ -118,7 +159,7 @@ export function WasteDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 bg-white border-border p-7 shadow-elevated">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-2xl font-bold text-foreground tracking-tight">Güncel Toplama Rotası</h3>
+            <h3 className="text-2xl font-bold text-foreground tracking-tight">Atık Kutuları - Anlık Doluluk</h3>
             <input
               type="text"
               placeholder="Lokasyon ara"
@@ -132,53 +173,46 @@ export function WasteDashboard() {
               className="w-full h-full object-contain"
             />
 
-            <div className="absolute top-[20%] left-[30%] w-11 h-11 bg-red-500 rounded-full flex items-center justify-center text-white font-bold text-sm border-4 border-white shadow-prominent">
-              95%
-            </div>
-            <div className="absolute top-[25%] left-[50%] w-11 h-11 bg-red-500 rounded-full flex items-center justify-center text-white font-bold text-sm border-4 border-white shadow-prominent">
-              88%
-            </div>
-            <div className="absolute top-[40%] left-[60%] w-11 h-11 bg-red-500 rounded-full flex items-center justify-center text-white font-bold text-sm border-4 border-white shadow-prominent">
-              82%
-            </div>
-            <div className="absolute top-[50%] left-[35%] w-11 h-11 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm border-4 border-white shadow-prominent">
-              65%
-            </div>
-            <div className="absolute top-[55%] left-[65%] w-11 h-11 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm border-4 border-white shadow-prominent">
-              58%
-            </div>
-            <div className="absolute top-[65%] left-[28%] w-11 h-11 bg-[hsl(var(--secondary))] rounded-full flex items-center justify-center text-white font-bold text-sm border-4 border-white shadow-prominent">
-              35%
-            </div>
-            <div className="absolute top-[70%] left-[55%] w-11 h-11 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm border-4 border-white shadow-prominent">
-              72%
-            </div>
+            {binMarkers.map((b) => (
+              <div
+                key={b.id}
+                className={`absolute w-11 h-11 ${getFillColor(b.fill)} rounded-full flex items-center justify-center text-white font-bold text-sm border-4 border-white shadow-prominent cursor-pointer`}
+                style={{ top: b.top, left: b.left }}
+                onMouseEnter={() => setHoverBin(b)}
+                onMouseLeave={() => setHoverBin(null)}
+                title={`${b.faculty} • Kutu ${b.id}`}
+              >
+                {b.fill}%
+              </div>
+            ))}
 
-            <svg className="absolute inset-0 w-full h-full pointer-events-none">
-              <path
-                d="M 240 120 L 400 150 L 480 240 L 280 300 L 520 330 L 224 390 L 440 420"
-                stroke="#f59e0b"
-                strokeWidth="4"
-                fill="none"
-                strokeDasharray="10,5"
-                opacity="0.8"
-              />
-            </svg>
+            {hoverBin && (
+              <div
+                className="absolute z-10 bg-white dark:bg-background border border-border rounded-xl shadow-prominent px-3 py-2 text-xs"
+                style={{
+                  top: `calc(${hoverBin.top} - 48px)`,
+                  left: `calc(${hoverBin.left} + 16px)`,
+                }}
+              >
+                <div className="font-semibold text-foreground mb-0.5">{hoverBin.faculty}</div>
+                <div className="text-muted-foreground">Kutu No: {hoverBin.id}</div>
+                <div className="text-muted-foreground">Koordinat: {hoverBin.coords.lat.toFixed(4)}, {hoverBin.coords.lng.toFixed(4)}</div>
+              </div>
+            )}
 
-            <div className="absolute bottom-6 left-6 right-6 bg-white/98 backdrop-blur-sm p-5 rounded-2xl border-2 border-border/50 shadow-elevated">
-              <h4 className="text-foreground font-bold mb-3 text-base">Rota Bilgileri</h4>
-              <div className="grid grid-cols-3 gap-6 text-sm">
-                <div>
-                  <p className="text-muted-foreground text-xs mb-1.5 font-medium">Toplam Durak</p>
-                  <p className="text-foreground font-bold text-lg">14</p>
+            <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-sm p-4 rounded-2xl border border-border/60 shadow-elevated">
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-red-500"></div>
+                  <span className="text-muted-foreground">Dolu (%80+)</span>
                 </div>
-                <div>
-                  <p className="text-muted-foreground text-xs mb-1.5 font-medium">Tahmini Süre</p>
-                  <p className="text-foreground font-bold text-lg">48 Dakika</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-orange-500"></div>
+                  <span className="text-muted-foreground">Orta (%50–79)</span>
                 </div>
-                <div>
-                  <p className="text-muted-foreground text-xs mb-1.5 font-medium">Toplam Mesafe</p>
-                  <p className="text-foreground font-bold text-lg">3.2 km</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-emerald-500"></div>
+                  <span className="text-muted-foreground">Boş (%0–49)</span>
                 </div>
               </div>
             </div>
@@ -283,32 +317,44 @@ export function WasteDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-white border-border p-7 shadow-elevated">
-          <h3 className="text-2xl font-bold text-foreground mb-5 tracking-tight">Atık Yoğunluk Bölgeleri (Haftalık)</h3>
+          <h3 className="text-2xl font-bold text-foreground mb-5 tracking-tight">Ayrıştırılma Değişimi (Önceki Aya Göre)</h3>
           <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={wasteVolumeData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <BarChart data={separationDelta}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis
-                dataKey="bolge"
-                stroke="hsl(var(--muted-foreground))"
-                tick={{ fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
+                dataKey="tur"
+                stroke="var(--color-muted-foreground)"
+                tick={{ fill: "var(--color-muted-foreground)", fontWeight: 600 }}
               />
               <YAxis
-                stroke="hsl(var(--muted-foreground))"
-                tick={{ fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
+                stroke="var(--color-muted-foreground)"
+                tick={{ fill: "var(--color-muted-foreground)", fontWeight: 600 }}
+                domain={["dataMin - 10", "dataMax + 10"]}
+                tickFormatter={(v) => `${v}%`}
               />
               <Tooltip
+                formatter={(v: number) => [`${v > 0 ? "+" : ""}${v}%`, "Değişim"]}
                 contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
+                  backgroundColor: "var(--color-card)",
+                  border: "1px solid var(--color-border)",
                   borderRadius: "12px",
-                  color: "hsl(var(--foreground))",
+                  color: "var(--color-foreground)",
                   boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                   padding: "12px",
                 }}
               />
-              <Bar dataKey="hacim" fill="hsl(var(--primary))" radius={[10, 10, 0, 0]} name="Hacim (kg)" />
+              <Bar dataKey="delta" radius={[8, 8, 0, 0]}>
+                {separationDelta.map((d, i) => (
+                  <Cell key={`cell-${i}`} fill={d.delta >= 0 ? "#10b981" : "#ef4444"} />
+                ))}
+                <LabelList dataKey="delta" position="top" fill="var(--color-foreground)" formatter={(v: number) => `${v > 0 ? "+" : ""}${v}%`} />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
+          <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-sm" style={{ backgroundColor: "#10b981" }}></span> Artış</div>
+            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-sm" style={{ backgroundColor: "#ef4444" }}></span> Azalış</div>
+          </div>
         </Card>
 
         <Card className="bg-white border-border p-7 shadow-elevated">
