@@ -1,30 +1,24 @@
-# Campus management platform
+📘 PAÜ Akıllı Kampüs Dijital Yönetim Platformu
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+Pamukkale Üniversitesi Kınıklı Kampüsü için geliştirilmiş olan Akıllı Kampüs Dijital Yönetim Platformu, enerji, ulaşım ve atık yönetimi süreçlerini tek bir arayüz altında birleştiren modern ve ölçeklenebilir bir web uygulamasıdır.
+Bu proje, “Akıllı Kampüs” vizyonu doğrultusunda kampüs içerisindeki kaynakları daha verimli kullanmayı, karar alma süreçlerini desteklemeyi ve sürdürülebilirlik hedeflerine katkı sağlamayı amaçlar.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/arifecinar226-9771s-projects/v0-campus-management-platform)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/detzi2SNhwy)
+🚀 Proje Amacı
 
-## Overview
+Bu platformun temel hedefi:
+Enerji tüketimi, atık toplama, ulaşım gibi kampüs süreçlerini tek bir dijital panelde toplamak
+IoT cihazları, sensörler, veri akışları gibi sistemlerden gelen bilgileri anlık olarak görselleştirmek
+Yöneticilere karar desteği sağlayan analitik grafikler sunmak
+Kampüs yönetimini daha hızlı, verimli ve sürdürülebilir hale getirmek
+Proje kapsamında geliştirilen arayüz; modern, erişilebilir, mobil uyumlu ve veri odaklı bir yaklaşım benimser.
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
-
-## Deployment
-
-Your project is live at:
-
-**[https://vercel.com/arifecinar226-9771s-projects/v0-campus-management-platform](https://vercel.com/arifecinar226-9771s-projects/v0-campus-management-platform)**
-
-## Build your app
-
-Continue building your app on:
-
-**[https://v0.app/chat/detzi2SNhwy](https://v0.app/chat/detzi2SNhwy)**
-
-## How It Works
-
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+🛠 Kullanılan Teknolojiler
+Frontend
+Next.js 16
+React 19
+Tailwind CSS 4.0
+Radix UI (formlar, modallar, dropdownlar, tooltipler, dialoglar)
+Recharts (grafik ve veri görselleştirme)
+React Hook Form + Zod (form doğrulama)
+Lucide Icons
+Embla Carousel, CmdK, Sonner gibi UI yardımcı paketler
